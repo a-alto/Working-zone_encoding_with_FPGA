@@ -1,0 +1,1177 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language italian
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement !h
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style french
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Prova Finale (Progetto di Reti Logiche)
+\end_layout
+
+\begin_layout Author
+Andrea Altomare [Cod.
+ Persona: 10608961 - Matricola: 891365]
+\end_layout
+
+\begin_layout Date
+30 Marzo 2020
+\end_layout
+
+\begin_layout Standard
+\align center
+
+\noun on
+Politecnico di Milano
+\begin_inset VSpace 5cm
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+Professore: William Fornaciari
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Abstract
+Obiettivo di tale prova è la descrizione VHDL (
+\emph on
+VHSIC Hardware Description Language
+\emph default
+) di un modulo hardware basato su FPGA volto alla realizzazione del metodo
+ di codifica a bassa disspazione di potenza basato su 
+\begin_inset Quotes eld
+\end_inset
+
+Working Zones
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "key-1"
+literal "false"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Section
+Introduzione
+\end_layout
+
+\begin_layout Standard
+Tale metodo di codifica è pensato per il Bus Indirizzi: si utilizza per
+ tradurre un indirizzo, quando questo viene trasmesso, secondo uno schema
+ di codifica basato su intervalli (detti, appunto, Working Zones).
+ In particolare, la specifica prevede un determinato numero di intervalli
+ di dimensione fissata (Dwz) i quali hanno un certo indirizzo di base.
+ All'interno dello schema di codifica possono esistere molteplici Working
+ Zones (Nwz).
+ La particolare specifica da implementare prevede, per ogni ciclo di elaborazion
+e, un indirizzo da codificare (tradurre) e 8 Working Zones.
+ Ogni intervallo ha dimensione 4, e gli indirizzi che ne fanno parte sono
+ contigui a partire dall'indirizzo di base (che è incluso nell'intervallo);
+ è garantito inoltre che le Working Zones non si sovrappongono.
+ Di seguito, lo schema concettuale delle Working Zones: 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/Documentazione/WZ_Scheme.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Schema concettuale Working Zones
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Il protocollo è il seguente: 
+\end_layout
+
+\begin_layout Itemize
+Se l’indirizzo da trasmettere (ADDR) non appartiene ad alcuna Working Zone
+ (
+\emph on
+WZ
+\emph default
+), esso viene semplicemente ritrasmesso in output senza nessuna variazione.
+ Il bit addizionale (posto come MSB) WZ_BIT assume il valore 0 ed indica
+ che non vi è stata alcuna operazione di codifica.
+ L’output assumerà la seguente forma: WZ_BIT & ADDR (& rappresenta il simbolo
+ di concatenazione);
+\end_layout
+
+\begin_layout Itemize
+Se l’indirizzo da trasmettere (ADDR) appartiene ad una WZ, si procede con
+ la traduzione.
+ In output si avrà un indirizzo formato da tre gruppi di bit: WZ_BIT (posto
+ a 1), WZ_NUM (rappresentante la codifica in binario naturale del numero
+ della Working Zone coinvolta) e WZ_OFFSET (ovvero l’offset di ADDR rispetto
+ all’indirizzo base della WZ alla quale ADDR appartiene) codificato come
+ 
+\emph on
+one-hot
+\emph default
+.
+ L’output assumerà la seguente forma: WZ_BIT & WZ_NUM & WZ_OFFSET.
+\end_layout
+
+\begin_layout Standard
+Tutti gli indirizzi iniziali (basi e address da codificare) hanno dimensione
+ pari a 7 bit, il MSB sarà sempre 0.
+\end_layout
+
+\begin_layout Standard
+Il modulo, a seguito di un segnale di 
+\emph on
+START
+\emph default
+, dovrà leggere da memoria l’indirizzo da codificare e i base address delle
+ WZ, dunque dovrà eseguire la traduzione e scrivere in RAM il risultato.
+ Infine asserirà un segnale di 
+\emph on
+DONE
+\emph default
+, che rimarrà alto fino all’abbassamento di 
+\emph on
+START
+\emph default
+.
+\end_layout
+
+\begin_layout Standard
+La memoria al quale si fa riferimento è una RAM con indirizzamento al Byte
+ (celle da 8 bit ciascuna) da 
+\begin_inset Formula $64\ KiB$
+\end_inset
+
+ (16 bit per indirizzare ciascuna delle 
+\begin_inset Formula $2^{16}$
+\end_inset
+
+ celle).
+\end_layout
+
+\begin_layout Standard
+Gli offset delle Working Zones non cambiano tra un ciclo di codifica e un
+ altro: tale situazione può verificarsi solo a seguito di un segnale di
+ 
+\emph on
+RESET
+\emph default
+.
+\end_layout
+
+\begin_layout Section
+Architettura
+\end_layout
+
+\begin_layout Subsection
+Considerazioni generali
+\end_layout
+
+\begin_layout Standard
+Il flusso di progettazione dell’hardaware è basato su una logica 
+\emph on
+top-down
+\emph default
+ e vede una prima fase di analisi della specifica nella quale ho fissato
+ gli obiettivi nel dettaglio del modulo da realizzare: il design del componente
+ si divide in due macro parti, una macchina a stati finiti (FSM, “
+\emph on
+Finite State Machine
+\emph default
+”) responsabile di gestire gli stadi della procedura di traduzione, ed il
+ Datapath, al quale è affidato il compito di implementare il sistema algoritmo
+ di codifca; segue dunque il momento della progettazione in cui ho definito
+ le caratteristiche generali che avrebbero dovuto avere la FSM ed il datapath.
+\end_layout
+
+\begin_layout Standard
+Mi sono concentrato in particolare sulla velocità di traduzione effettuando
+ un trade-off e, a tale scopo, impiegando più spazio; le ragioni di questa
+ scelta sono prevalentemente due:
+\end_layout
+
+\begin_layout Itemize
+Essendo, il prodotto finale, un componente hardware, il contesto di lavoro
+ in cui dovrebbe essere inserito prevede il privilegiare l’aspetto temporale
+ rispetto a quello spaziale: le prestazioni temporali a basso livello, different
+emente da quelle di un sistema software ad alto livello, devono essere quanto
+ più possibile elevate;
+\end_layout
+
+\begin_layout Itemize
+L’impiego di un maggiore spazio, in questo specifico caso, non fa degenerare
+ né i costi di produzione della possibile realizzazione fisica su FPGA,
+ né i costi relativi al consumo energetico, pertanto il compromesso effettuato
+ risulta giustificato.
+\end_layout
+
+\begin_layout Standard
+La strategia implementata si basa sul fatto che, all’interno di una stessa
+ esecuzione, gli indirizzi base delle WZ non cambiano.
+ Diverse esecuzioni sono scandite da segnali di 
+\emph on
+RESET
+\emph default
+, per cui, per velocizzare le traduzioni dopo aver svolto la prima, è sufficient
+e salvare i suddetti indirizzi in appositi registri per poterli riutilizzare
+ ogni volta.
+\end_layout
+
+\begin_layout Standard
+Ogni ciclo di codifica inizia con un segnale di 
+\emph on
+START
+\emph default
+, una volta caricati dalla memoria tutti gli indirizzi necessari, si procede
+ con l’algoritmo di traduzione vero e proprio.
+ Per ogni WZ:
+\end_layout
+
+\begin_layout Enumerate
+Si sottrae l’indirizzo base dall’ADDR da codificare, tale operazione è svolta
+ con segno (complemento a 2);
+\end_layout
+
+\begin_layout Enumerate
+Il risultato della sottrazione è utilizzato come segnale di selezione in
+ un multiplexer (MUX) per stabilire se ADDR si trova o meno nella WZ considerata
+;
+\end_layout
+
+\begin_layout Enumerate
+Dunque tramite un altro MUX si sceglie la codifica per ADDR.
+\end_layout
+
+\begin_layout Standard
+Una volta ottenuta la traduzione, viene eseguita la scrittura del risultato
+ in RAM.
+\end_layout
+
+\begin_layout Standard
+Il processo di codifica viene effettuato in una singola passata in parallelo
+ con tutte le WZ: i componenti necessari allo svolgimento dei passaggi sopra
+ descritti sono riportati per ogni Working Zone, in questo modo è possibile
+ in soli due cicli di clock stabilire se un indirizzo è parte o meno di
+ un certo intervallo e codificarlo opportunamente.
+\end_layout
+
+\begin_layout Standard
+È opportuno infine notare che l’architettura di entrambe le 
+\emph on
+entity
+\emph default
+ è stata codificata mediante una descrizione VHDL di tipo 
+\emph on
+Behavioral
+\emph default
+.
+\end_layout
+
+\begin_layout Subsection
+Moduli descritti
+\end_layout
+
+\begin_layout Subsubsection
+entity project_reti_logiche
+\end_layout
+
+\begin_layout Standard
+Il modulo principale che implementa l’interfaccia (ingressi e uscite) del
+ sistema complessivo con l’esterno (in particolare, con il testbench) e
+ la FSM.
+ Essa riceve i segnali dall’esterno e svolge le opportune computazioni.
+ In particolare al suo interno sono descritti tre processi che implementano,
+ rispettivamente, il registro per il salvataggio dello stato corrente, la
+ funzione di stato prossimo Delta la quale calcola e scandisce le transizioni
+ di stato, e la funzione d’uscita Lambda: è calcolata a partire dal solo
+ stato, in modo da realizzare una macchina di 
+\emph on
+Moore
+\emph default
+, ed asserisce opportunamente i segnali di controllo per il Datapath.
+ Questa entità è inoltre collegata al suo interno con un altro modulo: il
+ Datapath.
+\end_layout
+
+\begin_layout Standard
+Gli stati della FSM sono 14.
+ 
+\end_layout
+
+\begin_layout Paragraph
+idle e ready:
+\end_layout
+
+\begin_layout Standard
+I primi due stati sono quelli di inizio computazione: la macchina è in attesa
+ del primo segnale di 
+\emph on
+START
+\emph default
+.
+ La differenza sta nel fatto che, dovendo inizialmente memorizzare tutti
+ gli indirizzi, dallo stato di 
+\emph on
+idle
+\emph default
+ si passerà a quello di fetch della prima WZ, mentre dallo stato di ready
+ si passerà direttamente al fetch dell’ADDR da codificare.
+ Dopo un segnale di 
+\emph on
+RESET
+\emph default
+ si tornerà dunque sempre allo stato di 
+\emph on
+idle
+\emph default
+; mentre, dopo la prima computazione, se non occorrono segnali di 
+\emph on
+RESET
+\emph default
+ si tornerà sempre allo stato di 
+\emph on
+ready
+\emph default
+, in modo da sfruttare gli indirizzi base già memorizzati.
+\end_layout
+
+\begin_layout Paragraph
+fetch:
+\end_layout
+
+\begin_layout Standard
+Gli stati 
+\emph on
+ftch1, ftch2, …, ftch8
+\emph default
+ servono a leggere da RAM e salvare le WZ, quindi in 
+\emph on
+ftchAddr
+\emph default
+ si procede alla lettura dell’indirizzo da tradurre.
+\end_layout
+
+\begin_layout Paragraph
+encode:
+\end_layout
+
+\begin_layout Standard
+Lo stato 
+\emph on
+encode
+\emph default
+ rappresenta il cuore del meccanismo di traduzione e memorizza nei registri
+ intermedi del datapath le codifiche parziali;
+\end_layout
+
+\begin_layout Paragraph
+output:
+\end_layout
+
+\begin_layout Standard
+nello stato di 
+\emph on
+output
+\emph default
+ si prepara la scrittura in memoria del risultato della traduzione.
+ Questi due stati in particolare potrebbero essere riuniti in un unico “macrosta
+to”, tuttavia, come spiegato in seguito nella descrizione del datapath,
+ dividere la fase di codifica dalla fase di output ha dei vantaggi.
+\end_layout
+
+\begin_layout Paragraph
+finish:
+\end_layout
+
+\begin_layout Standard
+L’ultimo stato è quello di 
+\emph on
+finish
+\emph default
+, nel quale si asserisce semplicemente il segnale di 
+\emph on
+DONE
+\emph default
+ per comunicare che la computazione è terminata, come richiesto da specifica.
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+È da osservare, ai fini della comprensione della transizione di stato quando
+ il componente viene testato, che i vari 
+\emph on
+process
+\emph default
+ sono sincronizzati sul fronte di discesa del clock, e non, come più di
+ consueto, su quello di salita.
+ La funzione VHDL utilizzata in particolare è “
+\emph on
+falling_edge(i_clk)
+\emph default
+”, ed è utile a non avere problemi quando si interagisce con la memoria
+ RAM: così facendo si può infatti richiedere un dato e salvarlo in un registro
+ nello stesso ciclo di clock (l’interazione con la memoria impiega 
+\begin_inset Formula $1\ ns$
+\end_inset
+
+, leggendo il dato sul fronte di discesa si riesce ad attendere questo lasso
+ di tempo senza impiegare uno stato in più della FSM).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/Documentazione/fsm_reduced.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Macchina a Stati Finiti
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+entity datapath
+\end_layout
+
+\begin_layout Standard
+Questo modulo implementa l’algoritmo di codifica vero e proprio: si basa
+ sul procedimento sopra descritto.
+ Oltre al registro per memorizzare l’ADDR da tradurre, per ogni Working
+ Zone sono descritti, tramite opportuni processi, i seguenti componenti:
+ un registro per l’indirizzo di base della WZ; un Subtractor per effettuare
+ la sottrazione tra i due indirizzi; un Multiplexer per la selezione di
+ una 
+\emph on
+codifica parziale
+\emph default
+ che verrà salvata in un apposito registro; e un ultimo Multiplexer che
+ permetterà di scegliere infine la codifica corretta per l’ADDR considerato.
+\end_layout
+
+\begin_layout Standard
+In particolare, è opportuno notare che il segnale di selezione del primo
+ MUX è dato proprio dal risultato della sottrazione: se tale risultato è
+ un numero compreso fra 0 e 3 (inclusi), vuol dire che ADDR è nella WZ,
+ dunque verrà selezionata direttamente la sua codifica finale; ciò è possibile
+ poiché ogni WZ ha la propria “catena” di componenti, pertanto il MUX 
+\emph on
+numero uno
+\emph default
+ selezionerà la codifica in binario naturale del numero uno (
+\begin_inset Formula $001$
+\end_inset
+
+), il MUX 
+\emph on
+numero due
+\emph default
+ selezionerà la codifica 
+\begin_inset Formula $002$
+\end_inset
+
+ e così via.
+ Il WZ_OFFSET verrà scelto in base al risultato della sottrazione: non essendo
+ possibile utilizzare direttamente tale valore (poiché WZ_OFFSET deve essere
+ codificato in one-hot), si sceglie l’equivalente one-hot della relativa
+ codifica binaria (es: 
+\begin_inset Formula $01\implies0010$
+\end_inset
+
+, 
+\begin_inset Formula $11\implies1000$
+\end_inset
+
+).
+ Il WZ_BIT sarà sempre 1 in questi casi.
+ Se il risultato non è compreso fra 0 e 3 (il sistema riconosce anche risultati
+ negativi, essendo la sottrazione imposta con tipi numerici 
+\emph on
+signed
+\emph default
+) verrà semplicemente riportato un codice costituito solo da 0.
+\end_layout
+
+\begin_layout Standard
+Queste codifiche parziali sono salvate in un registro di appoggio: questa
+ scelta progettuale è stata effettuata poiché, in questo modo, è possibile
+ ottenere frequenze di funzionamento più alte per il sistema.
+ Se tutte le operazioni venissero effettuate in una volta, sarebbe necessario
+ un periodo di clock più lungo rispetto a quello che si può ottenere “spezzando”
+ la procedura di codifica in più stadi.
+ L’ultimo passaggio è svolto dal secondo MUX, il quale riceve come segnale
+ di selezione un bus di 8 bit costituito dai MSB delle codifiche parziali
+ calcolate in precedenza: dato che le Working Zones non possono essere sovrappos
+te (da specifica), se l’indirizzo finale è già stato calcolato, esso è anche
+ unico, dunque la posizione dell’unico bit a 1 stabilirà anche il numero
+ del registro dal quale prendere l’indirizzo correttamente tradotto; se
+ invece non vi è alcun bit a 1 significa che ADDR non appartiene ad alcuna
+ WZ, pertanto verrà semplicemente dato, così come è, in uscita.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/Documentazione/datapath_modified.png
+	scale 60
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Risultati sperimentali
+\end_layout
+
+\begin_layout Standard
+Di seguito sono riportati i risultati ottenuti dopo aver opportunamente
+ scritto il codice VHDL, utilizzando l’ambiente 
+\emph on
+Xilinx Vivado 2019.2
+\emph default
+.
+\end_layout
+
+\begin_layout Subsection
+RTL Analysis
+\end_layout
+
+\begin_layout Standard
+Osservando lo 
+\emph on
+Schematic
+\emph default
+ in 
+\emph on
+RTL ANALYSIS
+\emph default
+ e concentrandosi sul datapath si può notare come i componenti logici indotti
+ da Vivado in seguito all’analisi del codice sono esattamente quelli previsti
+ in fase di design del sistema: la struttura rispecchia fedelmente lo schema
+ sopra riportato.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/Documentazione/schematic_reduced.png
+	scale 60
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Sintesi
+\end_layout
+
+\begin_layout Standard
+La sintesi del componente procede senza errori, dunque quanto scritto in
+ codice VHDL è correttamente sintetizzabile da Vivado.
+ La scheda FPGA utilizzata (target) è la 
+\emph on
+xc7a200tfbg484-1
+\emph default
+.
+ I 
+\emph on
+Warning
+\emph default
+ rilevanti ottenuti, visibili nella scheda 
+\emph on
+“Messages”
+\emph default
+, sono relativi al fatto che la porta 
+\emph on
+o_address
+\emph default
+ del componente (il bus di 16 bit in cui va posto l’indirizzo della cella
+ di RAM in cui leggere/scrivere) ha i bit dal 4 al 15 posti costantemente
+ a 0.
+ Ciò è dovuto al fatto che la RAM, come spiegato precedentemente, è da 
+\begin_inset Formula $64\ KiB$
+\end_inset
+
+, dunque necessita di 16 bit per indirizzare ogni cella; tuttavia gli effettivi
+ indirizzi usati sono quelli che vanno da 0 a 9, cosicché bastano i soli
+ bit da 0 a 3 di 
+\emph on
+o_address
+\emph default
+ per rappresentarli: i restanti non verranno mai utilizzati.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/ImgDocumentazione/warning.png
+	scale 70
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+La FSM è inferita da Vivado codificando lo stato con una codifica 
+\emph on
+binario naturale
+\emph default
+.
+ Ciò è dovuto al fatto che 14 è un numero potenzialmente elevato di stati
+ per essere codificato in 
+\emph on
+one-hot
+\emph default
+ (servirebbero più Flip-Flop), per cui il tool di sintesi non opererà tale
+ scelta.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/ImgDocumentazione/fsm_report.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Infine, è opportuno notare che, al termine del processo di sintesi, il device
+ ottenuto sarà composto complessivamente da 137 LUT (
+\emph on
+Look-up Tables
+\emph default
+) e 116 FF (
+\emph on
+Flip-Flop
+\emph default
+).
+ Tali numeri possono essere giustificati dal fatto che, come spiegato nelle
+ considerazioni sulla fase di design, effettuando tutte le codifiche in
+ parallelo è necessario avere i componenti che operano l’algoritmo di traduzione
+ per ogni WZ.
+ Dunque si occupa più area, ma le computazioni saranno più veloci.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/ImgDocumentazione/synthesis_report.png
+	scale 60
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Simulazioni
+\end_layout
+
+\begin_layout Standard
+I test bench realizzati mirano a verificare che l’algoritmo di traduzione
+ (dunque il datapath) e la FSM funzionino correttamente.
+\end_layout
+
+\begin_layout Standard
+Per il datapath i test bench realizzati sono pochi: per l’implementazione
+ realizzata è sufficiente infatti verificare che la codifica funzioni anche
+ con valori agli estremi dell’intervallo di quelli possibili per affermare
+ che funzionerà anche con tutti gli altri.
+ Inoltre ciò che è cruciale controllare è il sistema di sottrazione (in
+ complemento a 2), in quanto è il perno su cui poggia concettualmente tutto
+ il flusso di codifica.
+\end_layout
+
+\begin_layout Standard
+Quanto necessario per testare il giusto funzionamento della FSM è invece
+ più complesso, poiché ha a che vedere con la temporizzazione dei segnali
+ inviati alla RAM, la corretta suddivisione delle fasi della computazione
+ nei relativi stati della macchina, e l’interazione con il modulo che si
+ occupa di testarla (il test bench).
+\end_layout
+
+\begin_layout Standard
+Di seguito sono riportate le descrizioni dei casi di test più significativi.
+ Tutti i test realizzati sono stati passati con successo dal componente
+ realizzato, sia in pre-synthesis (
+\emph on
+Behavioral Simulation
+\emph default
+) che in post-synthesis (
+\emph on
+Post-Synthesis Functional Simulation
+\emph default
+).
+\end_layout
+
+\begin_layout Subsection
+Tb_Datapath_1
+\end_layout
+
+\begin_layout Standard
+Il valore da codificare è 127 (7 bit posti a 
+\emph on
+‘1’
+\emph default
+) e il primo confronto viene effettuato con l’indirizzo base 0 (tutti i
+ bit posti a 
+\emph on
+‘0’
+\emph default
+).
+ ADDR in questo caso non appartiene ad alcuna WZ, per cui in uscita, in
+ RAM(9) dovrà essere presente proprio il valore iniziale 127 (
+\emph on
+“0 - 1111111”
+\emph default
+).
+\end_layout
+
+\begin_layout Subsection
+Tb_Datapath_2
+\end_layout
+
+\begin_layout Standard
+Il valore da codificare è 127, stavolta però appartiene alla ottava WZ (
+\begin_inset Formula $WZ\_NUM=7$
+\end_inset
+
+).
+ L’indirizzo base di tale WZ è 124 (il massimo valore per un indirizzo base,
+ da specifica); il valore ottenuto in uscita è 248 (
+\emph on
+“1 - 111 - 1000”
+\emph default
+).
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/ImgDocumentazione/datapath.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Tb_Datapath_3
+\end_layout
+
+\begin_layout Standard
+Altri test sono stati condotti con valori da codificare casuali, in modo
+ da avere una maggiore certezza del regolare funzionamento dell’algoritmo
+ di codifica e dell’entity datapath.
+\end_layout
+
+\begin_layout Subsection
+Tb_FSM_1_multi_start
+\end_layout
+
+\begin_layout Standard
+Il primo test per la FSM prevede un segnale di 
+\emph on
+START
+\emph default
+ dato più volte (senza cambiare il contenuto della RAM), in modo da verificare
+ che, se non vi sono segnali di 
+\emph on
+RESET
+\emph default
+, la macchina a stati partirà con le successive computazioni semplicemente
+ dalla fase di fetch di ADDR.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/ImgDocumentazione/multi_start.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Tb_FSM_2_reset_asynchronous
+\end_layout
+
+\begin_layout Standard
+Questo test bench mira a verificare due elementi essenziali: il primo è
+ quello per cui dato un segnale di 
+\emph on
+RESET
+\emph default
+ la macchina si riporti nello stato iniziale, di 
+\emph on
+idle
+\emph default
+, in attesa di un nuovo segnale di 
+\emph on
+START
+\emph default
+ (dopo il quale dovrà ricominciare la computazione innanzitutto eseguendo
+ la fetch degli indirizzi base di tutte le WZ); il secondo è invece relativo
+ al regolare funzionamento 
+\emph on
+indipendentemente da quando venga dato il segnale di RESET
+\emph default
+: che tale input arrivi durante la fase di codifica, in un periodo in cui
+ il 
+\emph on
+CLOCK
+\emph default
+ è alto o basso, sul fronte di salita o di discesa, non deve interferire
+ con il corretto funzionamento del sistema, il quale si dovrà in ogni caso
+ riportare stabilmente in stato di 
+\emph on
+idle
+\emph default
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/ImgDocumentazione/reset_async.png
+	scale 50
+
+\end_inset
+
+
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Tb_FSM_3_500MHz
+\end_layout
+
+\begin_layout Standard
+Il codice di questo caso di test permette di capire fino a quale frequenza
+ può funzionare il componente.
+ Nello specifico, il periodo di clock è di 
+\begin_inset Formula $2\ ns$
+\end_inset
+
+, ed è anche il periodo minimo al quale il modulo progettato può funzionare
+ in post-synthesis.
+ Ciò vuol dire che la frequenza di funzionamento massima è di 
+\begin_inset Formula $500\ MHz$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/ImgDocumentazione/wave_500MHz.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Tb_FSM_4_Different_Duty_Cycle
+\end_layout
+
+\begin_layout Standard
+Questo test bench verifica che il modulo funzioni bene anche con un Duty
+ Cycle del clock diverso dal 50%.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/ImgDocumentazione/duty_wave.png
+	scale 50
+
+\end_inset
+
+
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Il seguente frammento di codice mostra come si è potuto manipolare tale
+ parametro del segnale di 
+\emph on
+CLOCK
+\emph default
+.
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/ImgDocumentazione/duty_cycle.png
+	scale 70
+
+\end_inset
+
+
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Conclusioni
+\end_layout
+
+\begin_layout Standard
+Il design realizzato privilegia il risparmio di tempo rispetto al consumo
+ di area: ciò permette di ottenere migliori performance in diversi tipi
+ di sistemi (ipotizzando un utilizzo reale del modulo), ad esempio in soluzioni
+ dove il fattore temporale è critico per il corretto funzionamento.
+ Inoltre, un altro importante vantaggio nella computazione “in parallelo”
+ dei confronti di ADDR con tutte le WZ sta nel fatto che la codifica richiederà
+ sempre lo stesso tempo, permettendo una più semplice integrazione in un
+ sistema ed un’analisi di funzionamento più immediata in un contesto reale.
+ In definitiva, il 
+\emph on
+caso pessimo
+\emph default
+ corrisponde al 
+\emph on
+caso medio
+\emph default
+ e al 
+\emph on
+caso ottimo
+\emph default
+ di computazione; posto che la prima traduzione sia già stata effettuata,
+ e quindi le WZ siano già state memorizzate, il componente impiegherà, alla
+ massima frequenza (
+\begin_inset Formula $500\ MHz$
+\end_inset
+
+), un tempo di soli 
+\begin_inset Formula $12\ ns$
+\end_inset
+
+ per eseguire una codifica.
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename C:/Users/andal/Desktop/ProgettoRetiLogiche/ImgDocumentazione/maxvelocita.png
+	scale 50
+
+\end_inset
+
+
+\begin_inset VSpace 3cm
+\end_inset
+
+
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "key-1"
+
+\end_inset
+
+E.
+ Musoll, T.
+ Lang and J.
+ Cortadella, "Working-zone encoding for reducing the energy in microprocessor
+ address buses," in IEEE Transactions on Very Large Scale Integration (VLSI)
+ Systems, vol.
+ 6, no.
+ 4, pp.
+ 568-572, Dec.
+ 1998.
+\end_layout
+
+\end_body
+\end_document
